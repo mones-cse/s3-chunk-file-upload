@@ -1,16 +1,11 @@
-// import reactLogo from "./assets/react.svg";
-// import viteLogo from "/vite.svg";
 import "./App.css";
+import FileUploader from "./components/FileUploader";
 
 function App() {
-  // const [count, setCount] = useState(0);
-
   return (
-    <>
-      <h1 className="text-3xl font-bold underline text-amber-300">
-        Hello world!
-      </h1>
-    </>
+    <div className="min-h-screen flex items-center justify-center bg-gray-300">
+      <FileUploader />
+    </div>
   );
 }
 
