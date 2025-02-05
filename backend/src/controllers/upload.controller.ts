@@ -96,3 +96,11 @@ class UploadController {
 }
 
 export const uploadController = new UploadController();
+
+// Remove partial upload fils from S3
+// BUCKETNAME=<xxx>
+// aws s3api list-multipart-uploads --bucket $BUCKETNAME \
+// | jq -r '.Uploads[] | "--key \"\(.Key)\" --upload-id \(.UploadId)"' \
+// | while read -r line; do
+//     eval "aws s3api abort-multipart-upload --bucket $BUCKETNAME $line";
+// done

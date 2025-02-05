@@ -247,8 +247,22 @@ const FileUploader: React.FC = () => {
     }
   };
 
-  const resetUpload = () => {
+  const resetUpload = async () => {
     // todo: clear aws partial uploads
+
+    const response = await fetch("http://localhost:5001/api/upload/abort", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uploadId: uploadInfoRef.current.uploadId,
+        key: uploadInfoRef.current.key,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to abort upload");
+
     uploadInfoRef.current.abortController?.abort();
     setUploadState({
       error: null,
