@@ -31,6 +31,7 @@ interface UploadInfoRef {
   parts: UploadPart[];
   chunkSize: number;
   totalChunks: number;
+  abortController: AbortController | null;
 }
 
 interface UploadPart {
@@ -52,7 +53,9 @@ const FileUploader: React.FC = () => {
     parts: [],
     chunkSize: 5 * 1024 * 1024, // 5MB chunks,
     totalChunks: 0,
+    abortController: null,
   });
+  // const abortController = useRef<AbortController | null>(null);
 
   const resetAfterUpload = () => {
     setUploadState({
@@ -153,14 +156,14 @@ const FileUploader: React.FC = () => {
       "totalChunks",
       uploadInfoRef.current.totalChunks.toString()
     );
-
+    uploadInfoRef.current.abortController = new AbortController();
     // abortController.current = new AbortController();
 
     try {
       const response = await fetch("http://localhost:5001/api/upload/chunk", {
         method: "POST",
         body: formData,
-        // signal: abortController.current.signal,
+        signal: uploadInfoRef.current.abortController.signal,
       });
 
       if (!response.ok) throw new Error(`Failed to upload part ${partNumber}`);
@@ -217,10 +220,7 @@ const FileUploader: React.FC = () => {
     }
   };
 
-  const completeUpload = async (): // parts: UploadPart[],
-  // uploadId: string,
-  // key: string
-  Promise<void> => {
+  const completeUpload = async (): Promise<void> => {
     try {
       const response = await fetch(
         "http://localhost:5001/api/upload/complete",
@@ -246,6 +246,30 @@ const FileUploader: React.FC = () => {
     }
   };
 
+  const resetUpload = () => {
+    // todo: clear aws partial uploads
+    uploadInfoRef.current.abortController?.abort();
+    setUploadState({
+      error: null,
+      status: "",
+      currentChunk: 0,
+      isUploading: false,
+    });
+    uploadInfoRef.current = {
+      uploadId: "",
+      key: "",
+      parts: [],
+      chunkSize: 5 * 1024 * 1024,
+      totalChunks: 0,
+      abortController: null,
+    };
+    setFile(null);
+    const fileInput = document.getElementById("fileInput") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
+
   return (
     <div className="bg-gray-100  border-gray-300 border-[1px] text-white dark:text-black sp-6 min-w-xl max-w-2xl mx-auto bg- shadow-xl rounded-lg flex flex-col p-8">
       <FileSelect
@@ -261,6 +285,7 @@ const FileUploader: React.FC = () => {
               handleUpload={() => handleUpload()}
               isUploading={uploadState.isUploading}
             />
+            <ResetButton resetUpload={resetUpload} />
           </div>
           {uploadState.isUploading && (
             <UploadProgress
