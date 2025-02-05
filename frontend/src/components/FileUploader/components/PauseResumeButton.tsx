@@ -12,22 +12,22 @@ export const PauseResumeButton: React.FC<PauseResumeButtonProps> = ({
   uploading,
   isPaused,
 }) => {
-  if (!uploading && !isPaused) return null;
+  if (!uploading) return null;
 
   return (
     <button
       onClick={handlePauseResume}
       className="flex items-center px-4 py-2 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
     >
-      {uploading ? (
-        <>
-          <FaPause className="mr-2" />
-          Pause
-        </>
-      ) : (
+      {isPaused ? (
         <>
           <FaPlay className="mr-2" />
           Resume
+        </>
+      ) : (
+        <>
+          <FaPause className="mr-2" />
+          Pause
         </>
       )}
     </button>

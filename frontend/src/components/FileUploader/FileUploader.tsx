@@ -18,7 +18,7 @@ interface UploadState {
   error: string | null;
   isUploading: boolean;
   currentChunk: number;
-  // uploadId: string;
+  isPaused: boolean;
   // key: string;
   // parts: UploadPart[];
   // currentChunk: number;
@@ -46,6 +46,7 @@ const FileUploader: React.FC = () => {
     status: "",
     currentChunk: 0,
     isUploading: false,
+    isPaused: false,
   });
   const uploadInfoRef = useRef<UploadInfoRef>({
     uploadId: "",
@@ -254,6 +255,7 @@ const FileUploader: React.FC = () => {
       status: "",
       currentChunk: 0,
       isUploading: false,
+      isPaused: false,
     });
     uploadInfoRef.current = {
       uploadId: "",
@@ -267,6 +269,28 @@ const FileUploader: React.FC = () => {
     const fileInput = document.getElementById("fileInput") as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
+    }
+  };
+
+  const handlePauseResume = () => {
+    if (!uploadState.isPaused) {
+      // Pause
+      setUploadState((prev) => ({
+        ...prev,
+        isPaused: true,
+        status: "Upload paused",
+      }));
+      if (uploadInfoRef.current.abortController) {
+        uploadInfoRef.current.abortController.abort();
+      }
+    } else if (uploadState.isPaused) {
+      // Resume
+      uploadProcessor(uploadInfoRef.current.parts.length + 1);
+      setUploadState((prev) => ({
+        ...prev,
+        isPaused: false,
+        status: "Uploading...",
+      }));
     }
   };
 
@@ -284,6 +308,12 @@ const FileUploader: React.FC = () => {
             <UploadButton
               handleUpload={() => handleUpload()}
               isUploading={uploadState.isUploading}
+              isPaused={uploadState.isPaused}
+            />
+            <PauseResumeButton
+              handlePauseResume={handlePauseResume}
+              uploading={uploadState.isUploading}
+              isPaused={uploadState.isPaused}
             />
             <ResetButton resetUpload={resetUpload} />
           </div>
@@ -300,7 +330,7 @@ const FileUploader: React.FC = () => {
         </div>
       )}
       <div className="text-red-300 border-dashed border-2 border-blue-300 rounded-lg p-2 mt-4">
-        <pre>{JSON.stringify(uploadState, null, 2)}</pre>
+        <pre className="text-sm">{JSON.stringify(uploadState, null, 2)}</pre>
         <pre className="text-xs text-wrap">
           {JSON.stringify(uploadInfoRef.current, null, 2)}
         </pre>
