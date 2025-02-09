@@ -1,5 +1,4 @@
 import React from "react";
-import { FaUpload } from "react-icons/fa";
 
 interface FileSelectProps {
   handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -13,22 +12,19 @@ export const FileSelect: React.FC<FileSelectProps> = ({
   fileName,
 }) => {
   return (
-    <div className="mb-6">
+    <div className="mb-4">
       <input
         type="file"
+        id="fileInput"
         onChange={handleFileSelect}
         disabled={isUploading}
         className="hidden"
-        id="fileInput"
       />
       <label
         htmlFor="fileInput"
-        className={`flex items-center justify-center px-4 py-2  border-gray-900 border-2 border-dashed rounded-lg cursor-pointer ${
-          isUploading ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-300"
-        }`}
+        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors truncate"
       >
-        <FaUpload className="mr-2 text-gray-900" size={20} />
-        <p className="text-sm text-gray-900">{fileName || "Select File"}</p>
+        {fileName ? fileName : "Select File"}
       </label>
     </div>
   );

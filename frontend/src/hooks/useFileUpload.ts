@@ -1,240 +1,254 @@
-// import { useState, useRef } from "react";
-// import { UploadState, UploadPart, InitUploadResponse } from "../types/upload";
+import { useState, useRef } from "react";
+import { UploadState, UploadInfoRef, UploadPart } from "../types/upload";
+import { UPLOAD_CONSTANTS } from "../utils/constants";
 
-// export const useFileUpload = () => {
-//   const [file, setFile] = useState<File | null>(null);
-//   const [uploadState, setUploadState] = useState<UploadState>({
-//     uploadId: "",
-//     key: "",
-//     parts: [],
-//     currentChunk: 0,
-//     totalChunks: 0,
-//     uploading: false,
-//     status: "",
-//     error: null,
-//     isPaused: false,
-//     resumeFrom: 0,
-//   });
-//   const abortController = useRef<AbortController | null>(null);
+export const useFileUpload = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploadState, setUploadState] = useState<UploadState>({
+    error: null,
+    status: "",
+    currentChunk: 0,
+    isUploading: false,
+    isPaused: false,
+  });
 
-//   const calculateChunks = (fileSize: number): number => {
-//     const chunkUnitInMB = 5;
-//     const chunkSize = chunkUnitInMB * 1024 * 1024;
-//     return Math.ceil(fileSize / chunkSize);
-//   };
+  const uploadInfoRef = useRef<UploadInfoRef>({
+    uploadId: "",
+    key: "",
+    parts: [],
+    chunkSize: UPLOAD_CONSTANTS.CHUNK_SIZE,
+    totalChunks: 0,
+    abortController: null,
+  });
 
-//   const initiateUpload = async (): Promise<InitUploadResponse> => {
-//     if (!file) throw new Error("No file selected");
+  const resetAfterUpload = () => {
+    setUploadState({
+      status: "",
+      error: null,
+      isUploading: false,
+      currentChunk: 0,
+      isPaused: false,
+    });
+    uploadInfoRef.current = {
+      uploadId: "",
+      key: "",
+      parts: [],
+      chunkSize: UPLOAD_CONSTANTS.CHUNK_SIZE,
+      totalChunks: 0,
+      abortController: null,
+    };
+    setFile(null);
+  };
 
-//     try {
-//       const response = await fetch("http://localhost:5001/api/upload/init", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ fileName: file.name }),
-//       });
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      const totalChunks = Math.ceil(
+        selectedFile.size / uploadInfoRef.current.chunkSize
+      );
+      setFile(selectedFile);
+      uploadInfoRef.current.totalChunks = totalChunks;
+      setUploadState((prev) => ({
+        ...prev,
+        error: null,
+        status: "File selected",
+      }));
+    }
+  };
 
-//       if (!response.ok) throw new Error("Failed to initiate upload");
+  const initiateUpload = async () => {
+    if (!file) throw new Error("No file selected");
 
-//       return await response.json();
-//     } catch (error) {
-//       if (error instanceof Error) {
-//         setUploadState((prev) => ({ ...prev, error: error.message }));
-//       }
-//       throw error;
-//     }
-//   };
+    try {
+      const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.INIT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name }),
+      });
 
-//   const handleFileSelect = async (
-//     event: React.ChangeEvent<HTMLInputElement>
-//   ) => {
-//     console.log("🚀 ~ FileUploader ~ handleFileSelect: ~ Step 1");
-//     const files = event.target.files;
-//     if (!files) return;
+      if (!response.ok) throw new Error("Failed to initiate upload");
+      return await response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        setUploadState((prev) => ({ ...prev, error: error.message }));
+      }
+      throw error;
+    }
+  };
 
-//     const selectedFile = files[0];
-//     const totalChunks = await calculateChunks(selectedFile.size);
-//     if (selectedFile) {
-//       setFile(selectedFile);
-//       setUploadState((prev) => ({
-//         ...prev,
-//         error: null,
-//         status: "File selected",
-//         totalChunks: totalChunks,
-//       }));
-//     }
-//   };
+  const uploadChunk = async (
+    chunk: Blob,
+    partNumber: number
+  ): Promise<UploadPart> => {
+    const formData = new FormData();
+    formData.append("chunk", chunk);
+    formData.append("partNumber", partNumber.toString());
+    formData.append("uploadId", uploadInfoRef.current.uploadId);
+    formData.append("key", uploadInfoRef.current.key);
+    formData.append(
+      "totalChunks",
+      uploadInfoRef.current.totalChunks.toString()
+    );
 
-//   const completeUpload = async (parts, uploadId, key) => {
-//     try {
-//       const response = await fetch(
-//         "http://localhost:5001/api/upload/complete",
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//           body: JSON.stringify({
-//             uploadId: uploadId,
-//             key: key,
-//             parts,
-//           }),
-//         }
-//       );
+    uploadInfoRef.current.abortController = new AbortController();
 
-//       if (!response.ok) throw new Error("Failed to complete upload");
+    try {
+      const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.CHUNK, {
+        method: "POST",
+        body: formData,
+        signal: uploadInfoRef.current.abortController.signal,
+      });
 
-//       const result = await response.json();
-//       return result;
-//     } catch (error) {
-//       throw error;
-//     }
-//   };
+      if (!response.ok) throw new Error(`Failed to upload part ${partNumber}`);
+      return await response.json();
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Upload aborted");
+      }
+      throw error;
+    }
+  };
 
-//   const uploadChunk = async (chunk, partNumber, uploadId, key, totalChunks) => {
-//     const formData = new FormData();
-//     formData.append("chunk", chunk);
-//     formData.append("partNumber", partNumber.toString());
-//     formData.append("uploadId", uploadId);
-//     formData.append("key", key);
-//     formData.append("totalChunks", totalChunks.toString());
+  const uploadProcessor = async (startFrom: number) => {
+    if (!file) return;
 
-//     abortController.current = new AbortController();
+    setUploadState((prev) => ({
+      ...prev,
+      isUploading: true,
+      status: "Uploading",
+    }));
 
-//     try {
-//       const response = await fetch("http://localhost:5001/api/upload/chunk", {
-//         method: "POST",
-//         body: formData,
-//         signal: abortController.current.signal,
-//       });
+    for (
+      let partNumber = startFrom;
+      partNumber <= uploadInfoRef.current.totalChunks;
+      partNumber++
+    ) {
+      const start = (partNumber - 1) * uploadInfoRef.current.chunkSize;
+      const end = Math.min(start + uploadInfoRef.current.chunkSize, file.size);
+      const chunk = file.slice(start, end);
 
-//       if (!response.ok) throw new Error(`Failed to upload part ${partNumber}`);
+      setUploadState((prev) => ({
+        ...prev,
+        currentChunk: partNumber,
+        status: `Uploading part ${partNumber} of ${uploadInfoRef.current.totalChunks}...`,
+      }));
 
-//       const part = await response.json();
-//       return part;
-//     } catch (error) {
-//       if (error.name === "AbortError") {
-//         throw new Error("Upload aborted");
-//       }
-//       throw error;
-//     }
-//   };
+      const part = await uploadChunk(chunk, partNumber);
+      uploadInfoRef.current.parts.push(part);
+    }
 
-//   const handleUpload = async (startFrom = 1) => {
-//     if (!file) return;
+    if (
+      uploadInfoRef.current.parts.length === uploadInfoRef.current.totalChunks
+    ) {
+      await completeUpload();
+      setUploadState((prev) => ({
+        ...prev,
+        isUploading: false,
+        status: "Upload completed successfully",
+      }));
+    } else {
+      throw new Error("Upload failed");
+    }
+  };
 
-//     try {
-//       const { uploadId, key } = await initiateUpload();
-//       console.log("🚀 ~ handleUpload ~ uploadId, key :", uploadId, key);
-//       const chunkSize = 5 * 1024 * 1024; // 5MB chunks
-//       const parts = [];
-//       setUploadState((prev) => ({
-//         ...prev,
-//         uploadId,
-//         uploading: true,
-//         key,
-//       }));
-//       console.log(
-//         "🚀 ~ FileUploader ~ handleUpload ~ uploadId: before form creation",
-//         uploadState
-//       );
+  const completeUpload = async (): Promise<void> => {
+    try {
+      const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.COMPLETE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uploadId: uploadInfoRef.current.uploadId,
+          key: uploadInfoRef.current.key,
+          parts: uploadInfoRef.current.parts,
+        }),
+      });
 
-//       for (
-//         let partNumber = 1;
-//         partNumber <= uploadState.totalChunks;
-//         partNumber++
-//       ) {
-//         const start = (partNumber - 1) * chunkSize;
-//         const end = Math.min(start + chunkSize, file.size);
-//         const chunk = file.slice(start, end);
+      if (!response.ok) throw new Error("Failed to complete upload");
+      resetAfterUpload();
+      await response.json();
+    } catch (error) {
+      console.error(`Error completing upload:`, error);
+    }
+  };
 
-//         setUploadState((prev) => ({
-//           ...prev,
-//           currentChunk: partNumber,
-//           status: `Uploading part ${partNumber} of ${prev.totalChunks}...`,
-//         }));
+  const handleUpload = async () => {
+    if (!file) return;
+    try {
+      const { uploadId, key } = await initiateUpload();
+      uploadInfoRef.current = {
+        ...uploadInfoRef.current,
+        uploadId,
+        key,
+      };
+      uploadProcessor(1);
+      return true;
+    } catch (error) {
+      setUploadState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Upload failed",
+        status: "Upload failed",
+        isUploading: false,
+      }));
+      console.error("Error uploading file", error);
+    }
+  };
 
-//         const part = await uploadChunk(
-//           chunk,
-//           partNumber,
-//           uploadId,
-//           key,
-//           uploadState.totalChunks
-//         );
-//         parts.push(part);
+  const resetUpload = async () => {
+    try {
+      const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.ABORT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uploadId: uploadInfoRef.current.uploadId,
+          key: uploadInfoRef.current.key,
+        }),
+      });
 
-//         setUploadState((prev) => ({
-//           ...prev,
-//           parts: [...prev.parts, part],
-//           status: `Part ${partNumber} uploaded successfully`,
-//         }));
-//       }
+      if (!response.ok) throw new Error("Failed to abort upload");
 
-//       setUploadState((prev) => ({
-//         ...prev,
-//         status: "Completing upload...",
-//       }));
+      uploadInfoRef.current.abortController?.abort();
+      resetAfterUpload();
 
-//       await completeUpload(parts, uploadId, key);
+      const fileInput = document.getElementById(
+        "fileInput"
+      ) as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+    } catch (error) {
+      console.error("Error resetting upload:", error);
+    }
+  };
 
-//       setUploadState((prev) => ({
-//         ...prev,
-//         uploading: false,
-//         status: "Upload completed successfully",
-//       }));
-//     } catch (error) {
-//       setUploadState((prev) => ({
-//         ...prev,
-//         uploading: false,
-//         error: error.message,
-//         status: "Upload failed",
-//       }));
-//     }
-//   };
+  const handlePauseResume = () => {
+    if (!uploadState.isPaused) {
+      setUploadState((prev) => ({
+        ...prev,
+        isPaused: true,
+        status: "Upload paused",
+      }));
+      if (uploadInfoRef.current.abortController) {
+        uploadInfoRef.current.abortController.abort();
+      }
+    } else {
+      uploadProcessor(uploadInfoRef.current.parts.length + 1);
+      setUploadState((prev) => ({
+        ...prev,
+        isPaused: false,
+        status: "Uploading...",
+      }));
+    }
+  };
 
-//   const handlePauseResume = () => {
-//     if (uploadState.uploading) {
-//       // pause
-//       setUploadState((prev) => ({
-//         ...prev,
-//         isPaused: true,
-//         status: "Upload paused",
-//       }));
-//       if (abortController.current) {
-//         abortController.current.abort();
-//       } else if (uploadState.isPaused) {
-//         // Resume
-//         handleUpload(uploadState.resumeFrom);
-//       }
-//     }
-//   };
-
-//   const resetUpload = () => {
-//     setUploadState({
-//       uploadId: "",
-//       key: "",
-//       parts: [],
-//       currentChunk: 0,
-//       totalChunks: 0,
-//       uploading: false,
-//       status: "",
-//       error: null,
-//     });
-//     setFile(null);
-//     // Reset file input
-//     document.getElementById("fileInput").value = "";
-//   };
-
-//   // Other methods remain similar but with proper TypeScript types
-//   // ... (uploadChunk, completeUpload, handleUpload implementations)
-
-//   return {
-//     file,
-//     uploadState,
-//     handleFileSelect,
-//     handleUpload,
-//     handlePauseResume,
-//     resetUpload,
-//   };
-// };
+  return {
+    file,
+    uploadState,
+    uploadInfoRef,
+    handleFileSelect,
+    handleUpload,
+    handlePauseResume,
+    resetUpload,
+  };
+};

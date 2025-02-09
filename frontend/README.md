@@ -1,50 +1,54 @@
-# React + TypeScript + Vite
+# ChunkVault
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploads to AWS S3. It features a modern UI with upload progress tracking and pause/resume functionality. It is not production-ready and is intended for educational purposes only.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 📦 Chunk-by-chunk file upload
+- ⏸️ Pause and resume upload functionality
+- 📊 Real-time upload progress chunk by chunk
+- 🎯 Default chunk size of 5MB
+- 🎨 Modern UI with Tailwind CSS
 
-## Expanding the ESLint configuration
+## How It Works
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+1. File is split into 5MB chunks
+2. Initial request to `/api/upload/init` provides upload URL
+3. Each chunk is uploaded sequentially to `/api/upload/chunk` with required data like chunk, part number, uploadId, key.
+4. Progress is tracked for each chunk
+5. Upload can be paused/resumed at any time
+6. Final merge happens on server once all chunks are uploaded
+7. If upload is cancelled, all uploaded chunks are deleted from S3
 
-- Configure the top-level `parserOptions` property like this:
+## Tech Stack
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- React 19
+- Vite
+- Tailwind CSS
+- AWS SDK
+- TypeScript
+
+## Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/mones-cse/chunkvault.git
+cd chunkvault
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+pnpm install
 ```
+
+3. Run the development server:
+
+```bash
+pnpm dev
+```
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)

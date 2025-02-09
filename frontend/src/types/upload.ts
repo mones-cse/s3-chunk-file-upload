@@ -1,14 +1,18 @@
 export interface UploadState {
+  status: string;
+  error: string | null;
+  isUploading: boolean;
+  currentChunk: number;
+  isPaused: boolean;
+}
+
+export interface UploadInfoRef {
   uploadId: string;
   key: string;
   parts: UploadPart[];
-  currentChunk: number;
+  chunkSize: number;
   totalChunks: number;
-  uploading: boolean;
-  status: string;
-  error: string | null;
-  isPaused: boolean;
-  resumeFrom: number;
+  abortController: AbortController | null;
 }
 
 export interface UploadPart {
@@ -16,7 +20,7 @@ export interface UploadPart {
   PartNumber: number;
 }
 
-export interface InitUploadResponse {
+export interface UploadResponse {
   uploadId: string;
   key: string;
 }
