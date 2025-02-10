@@ -16,7 +16,9 @@
 
 ## Demo
 
-![Demo](./demo.gif)
+<!-- ![Demo](./demo.gif) -->
+
+https://github.com/mones-cse/s3-chunk-file-upload/assets/demo.mp4
 
 ## How It Works
 
