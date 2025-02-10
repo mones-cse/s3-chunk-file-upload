@@ -387,7 +387,6 @@ export const useFileUpload = () => {
 
   return {
     files,
-    isUploadingAll,
     isPausedAll,
     handleFileSelect,
     handlePauseAll,
