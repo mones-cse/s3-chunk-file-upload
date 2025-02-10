@@ -94,21 +94,29 @@ export const useFileUpload = () => {
 
   const processFileUpload = async (
     fileId: string,
-    fileState: FileUploadState
+    fileState: FileUploadState,
+    shouldPause: boolean = false
   ): Promise<void> => {
     const fileInfo = fileInfoRef.current[fileId];
-    if (!fileInfo) return;
+    if (!fileInfo || shouldPause) return;
+    console.log("🚀 ~ useFileUpload ~ fileInfo:", fileInfo, shouldPause);
 
     try {
+      const startChunk =
+        fileState.currentChunk === 0 ? 0 : fileState.currentChunk - 1;
       for (
-        let chunkIndex = fileState.currentChunk;
+        let chunkIndex = startChunk;
         chunkIndex < fileState.totalChunks;
         chunkIndex++
       ) {
-        const currentState = files.get(fileId);
-        if (currentState?.isPaused) {
-          return;
-        }
+        // const currentState = files.get(fileId);
+        // if (currentState?.isPaused) {
+        //   console.log(
+        //     "🚀 ~ useFileUpload ~ currentState.isPaused:",
+        //     currentState.isPaused
+        //   );
+        //   return;
+        // }
 
         const start = chunkIndex * UPLOAD_CONSTANTS.CHUNK_SIZE;
         const end = Math.min(
@@ -131,6 +139,8 @@ export const useFileUpload = () => {
         formData.append("uploadId", fileInfo.uploadId);
         formData.append("key", fileInfo.key);
         formData.append("totalChunks", fileState.totalChunks.toString());
+
+        console.log("🚀 ~ useFileUpload ~ totalChunks:", formData);
 
         const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.CHUNK, {
           method: "POST",
@@ -285,17 +295,27 @@ export const useFileUpload = () => {
     const fileState = files.get(fileId);
     if (!fileState) return;
 
-    updateFileState(fileId, {
-      isPaused: false,
-      status: "Resuming upload...",
-    });
-
+    // Create new abort controller before resuming
     const fileInfo = fileInfoRef.current[fileId];
     if (fileInfo) {
       fileInfo.abortController = new AbortController();
     }
 
-    await processFileUpload(fileId, fileState);
+    // Update state before processing
+    updateFileState(fileId, {
+      isPaused: false,
+      status: "Resuming upload...",
+    });
+
+    // Use the current file state for resuming
+    await processFileUpload(
+      fileId,
+      {
+        ...fileState,
+        isPaused: false,
+      },
+      false
+    );
   };
 
   const handleCancelFile = async (fileId: string) => {
