@@ -41,6 +41,7 @@ ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploa
 
 ## Tech Stack
 
+- Node.js
 - React 19
 - TypeScript
 - Tailwind CSS
@@ -64,16 +65,35 @@ git clone https://github.com/mones-cse/chunkvault.git
 cd chunkvault
 ```
 
-Install dependencies:
+Install dependencies for both fornend and backend:
+
+for backend: it will run on port 5001
+
+````
+```bash
+cd frontend
+pnpm install
+pnpm dev
+````
+
+for forntend: it will run on port 3000
 
 ```bash
+cd frontend
 pnpm install
+pnpm dev
 ```
 
-3. Run the development server:
+## Configuration
 
-```bash
-pnpm dev
+Create a `.env` file in the `backend` directory with the following content:
+
+```env
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_REGION=your-region
+S3_BUCKET_NAME=your-bucket-name
+PORT=5001
 ```
 
 ## API Endpoints
