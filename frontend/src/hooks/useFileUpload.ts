@@ -174,6 +174,24 @@ export const useFileUpload = () => {
       // Complete the upload
       await completeUpload(fileId);
 
+      // Create latest state by merging current files with the new update
+      const latestFiles = new Map(files);
+      latestFiles.set(fileId, {
+        ...fileState,
+        status: "Upload completed",
+        isUploading: false,
+        progress: 100,
+      });
+      //Check completion status using latest state
+      const allFilesCompleted = Array.from(latestFiles.values()).every(
+        (file) => file.progress === 100 && !file.isUploading && !file.error
+      );
+      // If all completed, update global state along with file state
+      if (allFilesCompleted) {
+        setIsUploading(false);
+        setIsPaused(false);
+      }
+
       updateFileState(fileId, {
         status: "Upload completed",
         isUploading: false,
@@ -206,9 +224,10 @@ export const useFileUpload = () => {
     });
   };
 
-  const completeUpload = async (fileId: string): Promise<void> => {
+  const completeUpload = async (fileId: string): Promise<any> => {
+    const fileState = files.get(fileId);
     const fileInfo = fileInfoRef.current[fileId];
-    if (!fileInfo) return;
+    if (!fileState || !fileInfo) return;
 
     try {
       const response = await fetch(UPLOAD_CONSTANTS.API_ENDPOINTS.COMPLETE, {
@@ -222,12 +241,13 @@ export const useFileUpload = () => {
       });
 
       if (!response.ok) throw new Error("Failed to complete upload");
-      await response.json();
+      return response.json();
     } catch (error) {
       console.error(`Error completing upload:`, error);
       throw error;
     }
   };
+
   const handlePauseAll = () => {
     if (isPaused) {
       // Resume all
