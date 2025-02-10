@@ -4,15 +4,10 @@ export interface FileUploadState {
   file: File;
   status: string;
   error: string | null;
-  isUploading: boolean;
   currentChunk: number;
   totalChunks: number;
   progress: number;
   isPaused: boolean;
-  // parts: UploadPart[];
-  // abortController: AbortController | null;
-  // uploadId: string;
-  // key: string;
 }
 
 export interface UploadPart {

@@ -5,8 +5,8 @@ interface FileSelectProps {
   handleFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onPauseAll: () => void;
   onCancelAll: () => void;
-  isUploading: boolean;
-  isPaused: boolean;
+  isUploadingAll: boolean;
+  isPausedAll: boolean;
   fileCount: number;
   areAllUploadsComplete: boolean;
 }
@@ -15,8 +15,8 @@ export const FileSelect: React.FC<FileSelectProps> = ({
   handleFileSelect,
   onPauseAll,
   onCancelAll,
-  isUploading,
-  isPaused,
+  isUploadingAll,
+  isPausedAll,
   fileCount,
   areAllUploadsComplete,
 }) => {
@@ -26,7 +26,7 @@ export const FileSelect: React.FC<FileSelectProps> = ({
         type="file"
         id="fileInput"
         onChange={handleFileSelect}
-        disabled={isUploading && !isPaused}
+        disabled={isUploadingAll && !isPausedAll}
         multiple
         className="hidden"
       />
@@ -42,12 +42,12 @@ export const FileSelect: React.FC<FileSelectProps> = ({
           <button
             onClick={onPauseAll}
             className={`px-4 py-2 rounded transition-colors ${
-              isPaused
+              isPausedAll
                 ? "bg-green-500 hover:bg-green-600"
                 : "bg-yellow-500 hover:bg-yellow-600"
             } text-white`}
           >
-            {isPaused ? "Resume All" : "Pause All"}
+            {isPausedAll ? "Resume All" : "Pause All"}
           </button>
           <button
             onClick={onCancelAll}

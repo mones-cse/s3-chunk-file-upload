@@ -6,8 +6,8 @@ import { FileSelect } from "./components/FileSelect";
 const FileUploader: React.FC = () => {
   const {
     files,
-    isUploading,
-    isPaused,
+    isUploadingAll,
+    isPausedAll,
     handleFileSelect,
     handlePauseAll,
     handleCancelAll,
@@ -17,7 +17,7 @@ const FileUploader: React.FC = () => {
   } = useFileUpload();
 
   const areAllUploadsComplete = Array.from(files.values()).every(
-    (file) => file.progress === 100 && !file.isUploading && !file.error
+    (file) => file.progress === 100 && !file.error
   );
 
   return (
@@ -28,8 +28,8 @@ const FileUploader: React.FC = () => {
         handleFileSelect={handleFileSelect}
         onPauseAll={handlePauseAll}
         onCancelAll={handleCancelAll}
-        isUploading={isUploading}
-        isPaused={isPaused}
+        isUploadingAll={isUploadingAll}
+        isPausedAll={isPausedAll}
         fileCount={files.size}
         areAllUploadsComplete={areAllUploadsComplete}
       />
@@ -46,7 +46,11 @@ const FileUploader: React.FC = () => {
       <div className="max-h-96 overflow-auto rounded border border-gray-200 bg-gray-50 p-4 w-lg">
         <pre className="whitespace-pre-wrap font-mono text-sm">
           {JSON.stringify(
-            { files: Array.from(files.values()), isUploading, isPaused },
+            {
+              files: Array.from(files.values()),
+              isUploadingAll,
+              isPausedAll,
+            },
             null,
             2
           )}

@@ -2,7 +2,12 @@
 import React from "react";
 import { FileUploadState } from "../../../types/upload";
 import { formatFileSize } from "../../../utils/formatters";
-import { FaRegCircleCheck } from "react-icons/fa6";
+import {
+  FaRegCircleCheck,
+  FaRegCirclePause,
+  FaRegCirclePlay,
+} from "react-icons/fa6";
+import { SlClose } from "react-icons/sl";
 
 interface FileListProps {
   files: Map<string, FileUploadState>;
@@ -17,10 +22,12 @@ export const FileList: React.FC<FileListProps> = ({
   onPause,
   onResume,
 }) => {
-  const isUploadCompleted = (fileState: FileUploadState) => {
-    return (
-      fileState.progress === 100 && !fileState.isUploading && !fileState.error
-    );
+  const isUploadComplete = (fileState: FileUploadState) => {
+    return fileState.progress === 100 && !fileState.error;
+  };
+
+  const isUploading = (fileState: FileUploadState) => {
+    return !fileState.isPaused && fileState.progress < 100 && !fileState.error;
   };
 
   return (
@@ -40,32 +47,31 @@ export const FileList: React.FC<FileListProps> = ({
                 </div>
               </div>
               <div className="flex gap-2">
-                {fileState.isUploading && (
+                {!isUploadComplete(fileState) && isUploading(fileState) && (
                   <button
-                    onClick={() =>
-                      fileState.isPaused
-                        ? onResume(fileState.id)
-                        : onPause(fileState.id)
-                    }
-                    className={`text-sm px-3 py-1 rounded transition-colors ${
-                      fileState.isPaused
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-yellow-500 hover:bg-yellow-600"
-                    } text-white`}
+                    onClick={() => onPause(fileState.id)}
+                    // className="text-sm px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded"
                   >
-                    {fileState.isPaused ? "Resume" : "Pause"}
+                    <FaRegCirclePause className="text-xl text-yellow-500 hover:text-yellow-800 hover:bg-gray-400 rounded-full" />
                   </button>
                 )}
-                {isUploadCompleted(fileState) ? (
-                  <div className="text-sm px-2 py-1 bg-emerald-500 text-white rounded flex items-center gap-1 cursor-default">
-                    <FaRegCircleCheck /> Done
+                {fileState.isPaused && (
+                  <button
+                    onClick={() => onResume(fileState.id)}
+                    // className="text-sm px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded"
+                  >
+                    <FaRegCirclePlay className="text-xl text-blue-500 hover:text-blue-800 rounded-full hover:scale-115" />
+                  </button>
+                )}
+                {isUploadComplete(fileState) ? (
+                  <div
+                  // className="text-sm px-2 py-1 bg-emerald-500 text-white rounded flex items-center gap-1 cursor-default"
+                  >
+                    <FaRegCircleCheck className="text-green-500 text-xl" />
                   </div>
                 ) : (
-                  <button
-                    onClick={() => onCancel(fileState.id)}
-                    className="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Cancel
+                  <button onClick={() => onCancel(fileState.id)}>
+                    <SlClose className="text-red-500 text-xl hover:text-red-800 rounded-full hover:scale-115" />
                   </button>
                 )}
               </div>
