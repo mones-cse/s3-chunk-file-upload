@@ -1,13 +1,13 @@
-# ChunkVault
+# s3 chunk file upload
 
-ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploads to AWS S3. It features a modern UI with upload progress tracking and pause/resume functionality for both individual files and batch operations. It is not production-ready and is intended for educational purposes only.
+`s3 chunk file upload` is a React & Node based file uploader that enables chunk-by-chunk file uploads to AWS S3. It features a modern UI with upload progress tracking and pause/resume functionality for both individual files and batch operations. It is not production-ready and is intended for educational purposes only.
 
 ## Features
 
 - 📦 Chunk-by-chunk file upload
 - 🚀 Concurrent file uploads
 - ⏸️ Individual and batch pause/resume functionality
-- 🗑️ Individual and batch cancel operations
+- 🗳️ Individual and batch cancel operations
 - 📊 Real-time upload progress tracking
 - 🎯 Default chunk size of 5MB
 - 🎨 Modern UI with Tailwind CSS
@@ -16,7 +16,7 @@ ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploa
 
 ## Demo
 
-![ChunkVault Demo](./demo.gif)
+![Demo](./demo.gif)
 
 ## How It Works
 
@@ -33,7 +33,7 @@ ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploa
 4. Control features:
    - Pause/Resume individual files
    - Pause/Resume all uploads
-   - Cancel individual files
+   - Cancel individual file upload
    - Cancel all uploads
 5. Cleanup:
    - Automatic cleanup on cancel
@@ -61,8 +61,8 @@ ChunkVault is a React-based file uploader that enables chunk-by-chunk file uploa
 Clone the repository:
 
 ```bash
-git clone https://github.com/mones-cse/chunkvault.git
-cd chunkvault
+git clone git@github.com:mones-cse/s3-chunk-file-upload.git
+cd s3-chunk-file-upload
 ```
 
 Install dependencies for both fornend and backend:
