@@ -18,7 +18,9 @@
 
 <!-- ![Demo](./demo.gif) -->
 
-https://github.com/mones-cse/s3-chunk-file-upload/demo.mp4
+<!-- https://github.com/mones-cse/s3-chunk-file-upload/demo.mp4 -->
+
+https://github.com/user-attachments/assets/57d86c8a-5179-4281-baee-31d72df10f9f
 
 ## How It Works
 
