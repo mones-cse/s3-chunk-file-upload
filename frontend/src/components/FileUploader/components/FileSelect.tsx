@@ -32,7 +32,11 @@ export const FileSelect: React.FC<FileSelectProps> = ({
       />
       <label
         htmlFor="fileInput"
-        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors truncate"
+        className={`cursor-pointer text-white px-4 py-2 rounded transition-colors truncate ${
+          !isPausedAll && !areAllUploadsComplete
+            ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed"
+            : "bg-blue-500 hover:bg-blue-600"
+        }`}
       >
         {fileCount > 0 ? `${fileCount} files selected` : "Select Files"}
       </label>
