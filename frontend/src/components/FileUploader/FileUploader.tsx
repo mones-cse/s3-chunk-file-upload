@@ -1,71 +1,57 @@
-// src/components/FileUploader/FileUploader.tsx
-
+// FileUploader.tsx
 import { useFileUpload } from "../../hooks/useFileUpload";
-import {
-  ErrorInfo,
-  FileInfo,
-  FileSelect,
-  PauseResumeButton,
-  ResetButton,
-  UploadButton,
-  UploadProgress,
-  UploadStatus,
-} from "./components";
+import { FileList } from "./components/FileList";
+import { FileSelect } from "./components/FileSelect";
 
 const FileUploader: React.FC = () => {
   const {
-    file,
-    uploadState,
-    uploadInfoRef,
+    files,
+    isUploading,
+    isPaused,
     handleFileSelect,
-    handleUpload,
-    handlePauseResume,
-    resetUpload,
+    handlePauseAll,
+    handleCancelAll,
+    handleCancelFile,
+    handlePauseFile,
+    handleResumeFile,
   } = useFileUpload();
+
+  const areAllUploadsComplete = Array.from(files.values()).every(
+    (file) => file.progress === 100 && !file.isUploading && !file.error
+  );
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 w-xl mx-auto flex flex-col items-center justify-center">
-      <p className="text-3xl"> S3 Chunk File Upload Demo</p>
-      <br />
+      <h1 className="text-3xl mb-6">S3 Chunk File Upload Demo</h1>
+
       <FileSelect
         handleFileSelect={handleFileSelect}
-        isUploading={uploadState.isUploading}
-        fileName={file?.name}
+        onPauseAll={handlePauseAll}
+        onCancelAll={handleCancelAll}
+        isUploading={isUploading}
+        isPaused={isPaused}
+        fileCount={files.size}
+        areAllUploadsComplete={areAllUploadsComplete}
       />
 
-      {file && (
-        <div className="space-y-4">
-          <FileInfo file={file} />
-
-          <div className="flex space-x-2">
-            <UploadButton
-              handleUpload={handleUpload}
-              isUploading={uploadState.isUploading}
-              isPaused={uploadState.isPaused}
-            />
-            <PauseResumeButton
-              handlePauseResume={handlePauseResume}
-              uploading={uploadState.isUploading}
-              isPaused={uploadState.isPaused}
-            />
-            <ResetButton resetUpload={resetUpload} />
-          </div>
-
-          {uploadState.isUploading && (
-            <UploadProgress
-              currentChunk={uploadState.currentChunk}
-              totalChunks={uploadInfoRef.current.totalChunks}
-            />
-          )}
-
-          <UploadStatus
-            status={uploadState.status}
-            uploading={uploadState.isUploading}
-          />
-
-          <ErrorInfo error={uploadState.error} />
-        </div>
+      {files.size > 0 && (
+        <FileList
+          files={files}
+          onCancel={handleCancelFile}
+          onPause={handlePauseFile}
+          onResume={handleResumeFile}
+        />
       )}
+      <br />
+      <div className="max-h-96 overflow-auto rounded border border-gray-200 bg-gray-50 p-4 w-lg">
+        <pre className="whitespace-pre-wrap font-mono text-sm">
+          {JSON.stringify(
+            { files: Array.from(files.values()), isUploading, isPaused },
+            null,
+            2
+          )}
+        </pre>
+      </div>
     </div>
   );
 };

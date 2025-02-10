@@ -1,18 +1,18 @@
-export interface UploadState {
+// upload.ts
+export interface FileUploadState {
+  id: string;
+  file: File;
   status: string;
   error: string | null;
   isUploading: boolean;
   currentChunk: number;
-  isPaused: boolean;
-}
-
-export interface UploadInfoRef {
-  uploadId: string;
-  key: string;
-  parts: UploadPart[];
-  chunkSize: number;
   totalChunks: number;
-  abortController: AbortController | null;
+  progress: number;
+  isPaused: boolean;
+  // parts: UploadPart[];
+  // abortController: AbortController | null;
+  // uploadId: string;
+  // key: string;
 }
 
 export interface UploadPart {
@@ -23,4 +23,15 @@ export interface UploadPart {
 export interface UploadResponse {
   uploadId: string;
   key: string;
+}
+
+export interface FileUploadInfo {
+  uploadId: string;
+  key: string;
+  parts: UploadPart[];
+  abortController: AbortController | null;
+}
+
+export interface FileStateRef {
+  [key: string]: FileUploadInfo;
 }
