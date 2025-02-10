@@ -73,9 +73,8 @@ Install dependencies for both fornend and backend:
 
 for backend: it will run on port 5001
 
-````
 ```bash
-cd frontend
+cd backend
 pnpm install
 pnpm dev
 ````
